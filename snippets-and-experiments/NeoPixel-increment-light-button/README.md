@@ -2,4 +2,4 @@
 
 ## Incrementing a light clockwise & counter clockwise with two buttons 
 
-![alt text](NeoPxiel-increment-light-button.gif)
+![alt text](NeoPixel-increment-light-button.gif)
