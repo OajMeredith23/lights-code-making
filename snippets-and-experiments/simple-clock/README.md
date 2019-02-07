@@ -4,4 +4,4 @@
 
 The current time, received from the RTC, is displayed on the NeoPixel ring, red = seconds, green = minutes, blue = hours
 
-[GIF] (simple-clock.GIF)
+![alt text](simple-click.gif)
