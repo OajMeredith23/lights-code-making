@@ -13,7 +13,8 @@
     // defines variables
     long duration;
     int distance;
-    
+
+    int light = 13;
 
     // Set mode 
 
@@ -25,6 +26,8 @@ void setup() {
     pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
     pinMode(echoPin, INPUT); // Sets the echoPin as an Input
     Serial.begin(9600); // Starts the serial communication
+
+    pinMode(light, OUTPUT);
     
     pinMode(a, OUTPUT);  //A
     pinMode(b, OUTPUT);  //B
@@ -64,6 +67,9 @@ void loop() {
 
     if(counter == 1){
       for(int i = 2; i < 10; i++){
+        
+        digitalWrite(light, HIGH);
+        
         if(i == 6 || i == 8){
           digitalWrite(i, HIGH);
         } else {
@@ -74,6 +80,8 @@ void loop() {
     } else {
 
       for(int i = 2; i < 10; i++){
+
+        digitalWrite(light, LOW);
         if(i == 9){
           digitalWrite(i, LOW);
         } else {
@@ -82,7 +90,7 @@ void loop() {
         
       }
     }
-     
+
 
      Serial.println(counter);
 
