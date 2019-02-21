@@ -62,7 +62,7 @@ void neoPixelTime(int secs, int mins, int hrs){
       pixels.setPixelColor(i, pixels.Color(0,0,0));
     }
   }
-  Serial.println(h);
+//  Serial.println(s);
   pixels.show();
 }
 

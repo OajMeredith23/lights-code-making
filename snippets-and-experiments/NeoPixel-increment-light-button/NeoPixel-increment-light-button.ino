@@ -42,13 +42,16 @@ void setup() {
   pinMode(BUTTON_B, INPUT);
   Serial.begin(9600);
 
-
+  
   
 }
 
 // Debouncing: reference: https://www.arduino.cc/en/Tutorial/Debounce
 
 void loop() {
+
+  digitalWrite(d,HIGH);
+  
   if(mode == -1){
     mode = NUMPIXELS - 1;
   }
@@ -103,10 +106,10 @@ void loop() {
 
  
 
-
+  int col = map(mode, 0, NUMPIXELS, 0, 255);
   for(int i = 0; i < NUMPIXELS; i++){
     if(i == mode){
-      pixels.setPixelColor(i, pixels.Color(col1,col2,col3));
+      pixels.setPixelColor(i, pixels.Color(col, col, col));
     } else {
       pixels.setPixelColor(i, pixels.Color(0,0,0));
     }
