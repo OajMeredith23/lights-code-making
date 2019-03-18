@@ -42,14 +42,13 @@ void setup () {
 
 DateTime currentTime() {
     DateTime now = rtc.now();
-    return now;
-    
+    return now; 
 }
 
 void neoPixelTime(int secs, int mins, int hrs){
   int s = map(secs, 0, 60, 0, NUMPIXELS);
   int m = map(mins, 0, 60, 0, NUMPIXELS);
-  int h = map(hrs % 12, 0, 23, 0, NUMPIXELS);
+  int h = map(hrs % 12, 0, 12, 0, NUMPIXELS);
 
   for(int i = 0; i < NUMPIXELS; i++){
     if(i == s){
@@ -62,7 +61,8 @@ void neoPixelTime(int secs, int mins, int hrs){
       pixels.setPixelColor(i, pixels.Color(0,0,0));
     }
   }
-//  Serial.println(s);
+  Serial.println(h);
+//  pixels.setPixelColor(10, pixels.Color(150,0,0));
   pixels.show();
 }
 
@@ -70,5 +70,6 @@ void loop () {
 
    DateTime t = currentTime();
    neoPixelTime(t.second(), t.minute(), t.hour());
-   
+
+
 }

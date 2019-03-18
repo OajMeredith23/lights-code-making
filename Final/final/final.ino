@@ -1,5 +1,6 @@
 
-    int pressed = LOW;
+    // MODE SWITCHING DONE USING AN ULTRASONIC SENSOR
+    int inRange = LOW;
     // defines pins numbers
     const int trigPin = 12;
     const int echoPin = 11;
@@ -10,6 +11,7 @@
     // Set mode 
 
     int counter = 0;
+    int mode = 0;
     int currentState = 0;
     int previousState = 0;
 
@@ -28,24 +30,25 @@ void setup() {
 
 
 }
-    
-void loop() {
 
-      
-      
+// Mode switch function
+void modeSwitch(){
      digitalWrite(trigPin, LOW); 
      delayMicroseconds(2); 
      digitalWrite(trigPin, HIGH);
      delayMicroseconds(10); 
      digitalWrite(trigPin, LOW);
-     
+
+    
      duration = pulseIn(echoPin, HIGH);
-     
+
+     //Converts the return result from the ultrasonic sensor into a usable distance
      distance = duration*0.034/2;
-           
-      int x = distance < triggerDistance ? 1 : 0;
+
+     // return 1 if the ultrasonic sensor returns a distance less than the set trigger distance (see var at top of file for this distance)
+     int x = distance < triggerDistance ? 1 : 0;
   
-      // See if the button is still changing state; if so, nudge the record of the last time it changed:
+      // See if the sensor is still changing state; if so, nudge the record of the last time it changed:
       
       if (x != transientState) {
         debounceTime = millis();
@@ -53,19 +56,18 @@ void loop() {
     
       transientState = x;
     
-      /* Has the button been stable for a few milliseconds; if so, do the "pressed" vs current comparison
+      /* Has the sensor been stable for a few milliseconds; if so, do the "inRange" vs current comparison
          to see whether it's an actual button change, and output serial data accordingly.
        */
       if (millis() - debounceTime > DEBOUNCE_DELAY) {
-        if (x == HIGH && pressed == LOW) {
-          pressed = HIGH;
+        if (x == HIGH && inRange == LOW) {
+          inRange = HIGH;
           currentState = 1;
-        } else if (x == LOW && pressed == HIGH) {
-          pressed = LOW;
+        } else if (x == LOW && inRange == HIGH) {
+          inRange = LOW;
           currentState = 0;
         }
       }
-
 
     if(currentState != previousState){
         if(currentState == 1){
@@ -74,9 +76,11 @@ void loop() {
        previousState = currentState;
      }
      
-    
-
     Serial.println(counter);
-     
+}
+    
+void loop() {
+
+      modeSwitch();
     
 }

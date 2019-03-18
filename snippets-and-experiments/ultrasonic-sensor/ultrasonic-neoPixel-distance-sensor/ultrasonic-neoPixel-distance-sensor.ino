@@ -1,8 +1,8 @@
 
     int pressed = LOW;
     // defines pins numbers
-    const int trigPin = 11;
-    const int echoPin = 12;
+    const int trigPin = 12;
+    const int echoPin = 11;
     // defines variables
     long duration;
     int distance;
@@ -31,7 +31,7 @@
     
     // Which pin on the Arduino is connected to the NeoPixels?
     // On a Trinket or Gemma we suggest changing this to 1
-    #define PIN            7
+    #define PIN            6
     
     // How many NeoPixels are attached to the Arduino?
     #define NUMPIXELS      24
