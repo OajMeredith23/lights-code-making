@@ -164,6 +164,7 @@ DateTime currentTime() {
 }
 
 void neoPixelTime(int secs, int mins, int hrs){
+
     pixels.setBrightness(140);
     int s = map(secs, 0, 60, 0, NUMPIXELS);
     int m = map(mins, 0, 60, 0, NUMPIXELS);
@@ -201,7 +202,7 @@ void dayNight(int secs, int mins, int hrs){
   }
   
   Serial.println(light);
-  light_pos = light_pos + 0.16;
+  light_pos = light_pos + 0.06;
 
 
   if(light_pos > NUMPIXELS) {
@@ -237,7 +238,7 @@ void dayNight(int secs, int mins, int hrs){
       blue_output = (-255) + map(minute_color, 0, 255 / 2, 0 , 255);
     }
     
-    pixels.setPixelColor(i, pixels.Color(brightness, green_output, blue_output));
+    pixels.setPixelColor(i, pixels.Color(green_output, brightness, blue_output));
     
   }
 
@@ -249,12 +250,12 @@ void dayNight(int secs, int mins, int hrs){
 void changeModeAnimation(){
   if(counter != previousCounter){
             
-            for(int i = 0; i > NUMPIXELS; i++){
+            for(int i = 0; i > NUMPIXELS + 1; i++){
               pixels.setPixelColor(i, pixels.Color(0, 0, 0));
               pixels.show();
             }
 
-            for(int i = 0; i < NUMPIXELS; i++){
+            for(int i = 0; i < 28; i++){
 
 
               int lightUp = map(i, 0, NUMPIXELS, 0, 70);
@@ -266,9 +267,9 @@ void changeModeAnimation(){
               }
               
               
-              pixels.setPixelColor(i + 1, pixels.Color(map(i, NUMPIXELS, 0, 0, 155), 0, map(i, 0, NUMPIXELS, 0, 155)));
+              pixels.setPixelColor(i, pixels.Color(map(i, NUMPIXELS, 0, 0, 155), 0, map(i, 0, NUMPIXELS, 0, 155)));
               pixels.show();
-              delay(max(10, i * 4));
+              delay(max(10, i * 3));
               reverse = true;
             }
     
