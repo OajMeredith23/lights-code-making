@@ -68,7 +68,12 @@
     float light_pos = 0.0;   // The position of imaginary floating light source
     float light_pos2 = 0.0;
     int spin, minute_color, green_output, blue_output;
-    
+
+    //Sunrise-sunset 
+    #include <Dusk2Dawn.h>
+    int LON_latitude = 51.474454; //LONDON Coordinates
+    int LON_longitude = 00.00000;
+
 void setup() {
     pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
     pinMode(echoPin, INPUT); // Sets the echoPin as an Input
@@ -96,6 +101,7 @@ void setup() {
     }
 
 
+    
     
 }
 
@@ -201,7 +207,7 @@ void dayNight(int secs, int mins, int hrs){
     
   }
   
-  Serial.println(light);
+//  Serial.println(light);
   light_pos = light_pos + 0.06;
 
 
@@ -279,6 +285,17 @@ void changeModeAnimation(){
          }
 }
 
+void sunriseSunset(int yr, int mnth, int dy){
+      Dusk2Dawn london(LON_latitude, LON_longitude, 0);
+      // Available methods are sunrise() and sunset(). Arguments are year, month,
+      // day, and if Daylight Saving Time is in effect.
+      int londonSunrise  = london.sunrise(yr, mnth, dy, true);
+      int londonSunset   = london.sunset(yr, mnth, dy, true);
+
+        char time[6];
+      Dusk2Dawn::min2str(time, londonSunrise);
+      Serial.println(time);
+}
 void loop() {
 
 //      Serial.println(counter);
@@ -288,8 +305,8 @@ void loop() {
         if(counter == 0){
 
           changeModeAnimation();
-          dayNight(t.second(), t.minute(), t.hour());
-          
+//          dayNight(t.second(), t.minute(), t.hour());
+          sunriseSunset(t.second(), t.minute(), t.hour());    
         
       } else {
 
@@ -301,7 +318,9 @@ void loop() {
 
 
       previousCounter = counter;
-      
+
+
+      Serial.println(t.minute());
       modeSwitch();
       pixels.show();
 }
