@@ -31,7 +31,6 @@
 
     //NEOPIXEL
 
-    
     #include <Adafruit_NeoPixel.h>
     #ifdef __AVR__
       #include <avr/power.h>
@@ -47,7 +46,6 @@
 
 
     //RTC
-
 
     // Date and time functions using a DS1307 RTC connected via I2C and Wire lib
     #include <Wire.h>
@@ -179,17 +177,19 @@ void neoPixelTime(int secs, int mins, int hrs){
     int h = map(hrs % 12, 0, 12, 0, NUMPIXELS);
   
     for(int i = 0; i < NUMPIXELS; i++){
-        if(i == s){
-          pixels.setPixelColor(i, pixels.Color(150,0,0));
-        } else if (i == m){
-          pixels.setPixelColor(i, pixels.Color(0,150,0));
-        } else if(i == h){
-            pixels.setPixelColor(i, pixels.Color(0,0,150));
+        if(i == 0){
           
-        } else if(i == 0) {
-            pixels.setPixelColor(i, pixels.Color(50,50,50));
-            
-          } else {
+          pixels.setPixelColor(i, pixels.Color(50,50,50));
+          if(i == h){
+            pixels.setPixelColor(i, pixels.Color(0,0,150));
+          }
+        } else if (i == s){
+          pixels.setPixelColor(i, pixels.Color(150,0,0));
+        } else if(i == m){
+          pixels.setPixelColor(i, pixels.Color(0,150,0));
+        } else if(i == h) {
+          pixels.setPixelColor(i, pixels.Color(0,0,150));    
+        } else {
           pixels.setPixelColor(i, pixels.Color(0,0,0));
         }
     }
@@ -232,8 +232,8 @@ void changeModeAnimation(){
 void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
 
 //        mnth = 6;
-//        hrs = 22;
-//        mins = 10;
+//        hrs = 6;
+//        mins = 30;
 
       //Three arguement are the chosen locations Longitude, latitude, and that locations difference from UTC
      //the Dusk2Dawn library incorrectly returns British Summer Time as 0 difference from UTC (it should be +1)...
@@ -345,11 +345,11 @@ void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
             
         } else if(daytime){
              if(secs < 30){
-                red_output = map(secs, 60, 0, 0, 50);
+                red_output = map(secs, 60, 0, 0, 25);
                 
                 blue_output =  map(secs, 0, 60, 100, 255);
               } else {
-                red_output = map(secs, 0, 60, 0, 50);
+                red_output = map(secs, 0, 60, 0, 25);
                 
                 blue_output =  map(secs, 60, 0, 100, 255);
               }

@@ -62,7 +62,6 @@ void neoPixelTime(int secs, int mins, int hrs){
     }
   }
   Serial.println(h);
-//  pixels.setPixelColor(10, pixels.Color(150,0,0));
   pixels.show();
 }
 
@@ -71,5 +70,5 @@ void loop () {
    DateTime t = currentTime();
    neoPixelTime(t.second(), t.minute(), t.hour());
 
-
+//    Serial.println(t.minute());
 }
