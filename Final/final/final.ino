@@ -67,12 +67,14 @@
     int light = 0;
     float light_pos = 0.0;   // The position of imaginary floating light source
     float light_pos2 = 0.0;
-    int spin, minute_color, green_output, blue_output;
+    int spin, minute_color, red_output, blue_output;
 
     //Sunrise-sunset 
+    //the Dusk2Dawn library (https://github.com/dmkishi/Dusk2Dawn) is used to get the sunrise/sunset times from the hard coded location
     #include <Dusk2Dawn.h>
     int LON_latitude = 51.474454; //LONDON Coordinates
     int LON_longitude = 00.00000;
+    int sunrise, sunset;
 
 void setup() {
     pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
@@ -195,64 +197,6 @@ void neoPixelTime(int secs, int mins, int hrs){
     
 }
 
-void dayNight(int secs, int mins, int hrs){
-
-  if(hrs <= 12){
-    
-    light = map(hrs, 0, 12, 0, 100);
-    
-  } else {
-    
-    light = map(hrs % 12, 0, 12, 100, 0);
-    
-  }
-  
-//  Serial.println(light);
-  light_pos = light_pos + 0.06;
-
-
-  if(light_pos > NUMPIXELS) {
-    light_pos = 0;
-  }
- 
-  
-  for(int i = 0; i < NUMPIXELS; i++){
-    
-    pixels.setBrightness(light);
-    
-    float distFrom_light_pos1 = abs(light_pos - i);
-    float distFrom_light_pos2 = abs(light_pos - i + NUMPIXELS);
-    float distFrom_light_pos3 = abs(light_pos - i - NUMPIXELS);
-
-    float distFrom_light_pos = min(distFrom_light_pos1, min(distFrom_light_pos2, distFrom_light_pos3));
-
-    int brightness = max(150 - distFrom_light_pos * 40, 0);
-
-    int spin = map(brightness, 0, 150, 0, 200);
-    
-
-     minute_color = map(secs, 0, 60, 0, 255);
-
-     
-    if(secs < 30){
-      green_output = map(minute_color, 0, 255 / 2, 0 , 255);
-      
-      blue_output = 255 - map(minute_color, 0, 255 / 2, 0 , 255);
-    } else {
-      green_output = (255*2) - map(minute_color, 0, 255 / 2, 0 , 255);
-      
-      blue_output = (-255) + map(minute_color, 0, 255 / 2, 0 , 255);
-    }
-    
-    pixels.setPixelColor(i, pixels.Color(green_output, brightness, blue_output));
-    
-  }
-
-  
-
-  
-}
-
 void changeModeAnimation(){
   if(counter != previousCounter){
             
@@ -285,16 +229,157 @@ void changeModeAnimation(){
          }
 }
 
-void sunriseSunset(int yr, int mnth, int dy){
-      Dusk2Dawn london(LON_latitude, LON_longitude, 0);
+void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
+
+//        mnth = 6;
+//        hrs = 22;
+//        mins = 10;
+
+      //Three arguement are the chosen locations Longitude, latitude, and that locations difference from UTC
+     //the Dusk2Dawn library incorrectly returns British Summer Time as 0 difference from UTC (it should be +1)...
+     // ...this means between 27th October and 31st march the third parameter must be at -1, other times it should be 0 
+     int UTC_difference = 0;
+
+     //Check that the date is within GMT time, not BST
+     if(dy <= 31 && mnth <= 3){
+        UTC_difference = -1;
+     } 
+
+     if(dy <= 27 && mnth >= 10){
+        UTC_difference = -1;
+     } 
+
+     //Pass the relevant location and UTC difference into the Dusk2Dawn library
+     Dusk2Dawn london(LON_latitude, LON_longitude, UTC_difference);
       // Available methods are sunrise() and sunset(). Arguments are year, month,
       // day, and if Daylight Saving Time is in effect.
+      // Time is returned in minutes elapsed since midnight. If no sunrises or
+      // sunsets are expected, a "-1" is returned.
       int londonSunrise  = london.sunrise(yr, mnth, dy, true);
       int londonSunset   = london.sunset(yr, mnth, dy, true);
 
-        char time[6];
-      Dusk2Dawn::min2str(time, londonSunrise);
-      Serial.println(time);
+      //The sunrise/sunset times returned as a character array
+      
+      char sunset[6];
+      char sunrise[6];
+      Dusk2Dawn::min2str(sunset, londonSunset);
+      Dusk2Dawn::min2str(sunrise, londonSunrise);
+
+     
+      /* Because the sunset times are returned as, for example '18:10' it's only possible to perform maths using their ASCII codes
+       *  this wouldn't have been reasonable to using these numbers for NeoPixel display, the below converts them to usable numbers
+       */
+
+      //Convert the ASCII code of each digit to it's integer
+      String sunset_hour_num1 = String((sunset[0]+0) - 48);
+      String sunset_hour_num2 = String((sunset[1]+0) - 48);
+      //Cocatanate these into a string
+      String sunset_hour_str = sunset_hour_num1 + sunset_hour_num2;
+      //Convert the string to a number
+      int sunset_hour = sunset_hour_str.toInt();
+
+      String sunset_minute_num1 = String((sunset[3]+0) - 48);
+      String sunset_minute_num2 = String((sunset[4]+0) - 48);
+      String sunset_minute_str = sunset_minute_num1 + sunset_minute_num2;
+      int sunset_minute = sunset_minute_str.toInt();
+
+      String sunrise_hour_num1 = String((sunrise[0]+0) - 48);
+      String sunrise_hour_num2 = String((sunrise[1]+0) - 48);
+      String sunrise_hour_str = sunrise_hour_num1 + sunrise_hour_num2;
+      int sunrise_hour = sunrise_hour_str.toInt();
+
+      String sunrise_minute_num1 = String((sunrise[3]+0) - 48);
+      String sunrise_minute_num2 = String((sunrise[4]+0) - 48);
+      String sunrise_minute_str = sunrise_minute_num1 + sunrise_minute_num2;
+      int sunrise_minute = sunrise_minute_str.toInt();
+      
+//      Serial.print((String)"Sunrise: " + sunrise);
+//      Serial.print((String)" Usable numbers: " + sunrise_hour + "," + sunrise_minute);
+//      Serial.print((String)" Sunset: " + sunset);
+//      Serial.print((String)" Usable numbers: " + sunset_hour + "," + sunset_minute);
+//      Serial.println();
+
+      //A countdown to sunrise and sunset, if sunrise/sunset has passed it returns a negative number equal to the minutes since
+      int sunriseCountdown = londonSunrise - ((hrs * 60) + mins);
+      int sunsetCountdown = londonSunset - ((hrs * 60) + mins);
+
+
+      light_pos = light_pos + 0.6;
+
+
+      if(light_pos > NUMPIXELS) {
+        light_pos = 0;
+      }
+     
+
+      pixels.setBrightness(50);
+      for(int i = 0; i < NUMPIXELS; i++){
+        
+        
+        float distFrom_light_pos1 = abs(light_pos - i);
+        float distFrom_light_pos2 = abs(light_pos - i + NUMPIXELS);
+        float distFrom_light_pos3 = abs(light_pos - i - NUMPIXELS);
+    
+        float distFrom_light_pos = min(distFrom_light_pos1, min(distFrom_light_pos2, distFrom_light_pos3));
+    
+        int brightness = max(150 - distFrom_light_pos * 40, 0);
+
+        minute_color = map(secs, 0, 60, 0, 255);
+
+        
+        int sunriseParam = sunriseCountdown;  // Change these variables to test the change of colour at different time of day
+        int sunsetParam = sunsetCountdown;   // between 15 and -15 for each is at sunrise and sunset respectively
+        
+        int sunrising = sunriseParam < 15 && sunriseParam > -15 ? 1 : 0; 
+        int daytime = sunriseParam < -15 && sunsetParam > 15 ? 1 : 0;
+        int sunsetting = sunsetParam < 15 && sunsetParam > -15 ? 1 : 0;
+//        int nighttime = sunsetParam < -15 && sunriseParam > 15 ? 1 : 0;
+
+        
+        Serial.println((String)sunriseParam + " " + sunsetParam + " " + sunsetting);
+        
+        if(sunrising){
+            red_output = map(sunriseParam, -15, 15, 100, 255);
+            blue_output = map(sunriseParam, 15, -15, 100, 255);
+            Serial.println("Sun is rising");
+            
+        } else if(daytime){
+             if(secs < 30){
+                red_output = map(secs, 60, 0, 0, 50);
+                
+                blue_output =  map(secs, 0, 60, 100, 255);
+              } else {
+                red_output = map(secs, 0, 60, 0, 50);
+                
+                blue_output =  map(secs, 60, 0, 100, 255);
+              }
+              
+              Serial.println("Sunny Day");
+          
+        } else if (sunsetting){
+            red_output = map(sunsetParam, 15, -15, 0, 255);
+            blue_output = map(sunsetParam, -15, 15, 0, 255);
+            Serial.println("The suns getting low");
+          
+        } else if (!daytime){
+           if(secs < 30){
+                red_output = map(secs, 60, 0, 100, 255);
+                
+                blue_output =  map(secs, 0, 60, 100, 255);
+              } else {
+                red_output = map(secs, 0, 60, 100, 255);
+                
+                blue_output =  map(secs, 60, 0, 100, 255);
+              }
+              
+          Serial.println("Pub?");
+        }
+//        Serial.println((String)blue_output + " " + red_output + " " + secs);
+        pixels.setPixelColor(i, pixels.Color(red_output, brightness, blue_output));
+      }
+      
+      
+     
 }
 void loop() {
 
@@ -305,8 +390,7 @@ void loop() {
         if(counter == 0){
 
           changeModeAnimation();
-//          dayNight(t.second(), t.minute(), t.hour());
-          sunriseSunset(t.second(), t.minute(), t.hour());    
+          sunriseSunset(t.year(), t.month(), t.day(),t.second(), t.minute(), t.hour());    
         
       } else {
 
@@ -319,8 +403,6 @@ void loop() {
 
       previousCounter = counter;
 
-
-      Serial.println(t.minute());
       modeSwitch();
       pixels.show();
 }
