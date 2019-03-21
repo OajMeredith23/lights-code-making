@@ -1,33 +1,29 @@
 
     // MODE SWITCHING DONE USING AN ULTRASONIC SENSOR
-    int inRange = LOW;
-    // defines pins numbers
+    // defines pin numbers
     const int trigPin = 12;
     const int echoPin = 11;
-    // defines variables
+    // defines variables to calculate distance in the main function
     long duration;
     int distance;
 
-    // Set mode 
-
+    
+    int inRange = LOW;
+    // defines the mode
     int counter = 0;
-    int mode = 0;
+    
     int currentState = 0;
     int previousState = 0;
     int previousCounter = 0;
-    int changing = false;
-    // debounce
-    int triggerDistance = 10;
+//    int changing = false;
 
+    // debounce function
+    // triggerDistance defines how far from the sensor the user needs to place an object to trigger a mode change
+    int triggerDistance = 10;
+    
     int transientState = 0;
     unsigned long debounceTime = 0;
     const unsigned long DEBOUNCE_DELAY = 50;
-
-    bool fadeIn = true;
-
-    //Change mode animation 
-
-    bool reverse = false;
 
     //NEOPIXEL
 
@@ -74,6 +70,7 @@
     int LON_longitude = 00.00000;
     int sunrise, sunset;
 
+//#define DEBUG 1
     // On the hour animation
 void setup() {
     pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
@@ -152,10 +149,10 @@ void modeSwitch(){
         
         
         if(currentState == 1){
-            for(int i = 0; i < NUMPIXELS; i++){
-              pixels.setPixelColor(i, pixels.Color(150,0,0));
-              delay(0);
-            }
+//            for(int i = 0; i < NUMPIXELS; i++){
+//              pixels.setPixelColor(i, pixels.Color(150,0,0));
+//              delay(0);
+//            }
             counter = (counter + 1) % 2;
         }
 
@@ -165,22 +162,30 @@ void modeSwitch(){
 }
 
 
+// Put the real time in its own function, it then returns it's data which can be passed into other functions
 DateTime currentTime() {
     DateTime now = rtc.now();
     return now; 
 }
 
-void neoPixelTime(int secs, int mins, int hrs){
+// Display the current time in a readable format on the NeoPixel
+void neoPixelTime(int secs, int mins, int hrs) /* Pass the seconds, minutes and hours in as parameters, arguments provided when the function is called in Void Loop()*/{
 
+    
     pixels.setBrightness(140);
+
+    // Map the times to the NeoPixel
     int s = map(secs, 0, 60, 0, NUMPIXELS);
     int m = map(mins, 0, 60, 0, NUMPIXELS);
+    //"hrs % 12" converts the 24 hour time to 12 hour
     int h = map(hrs % 12, 0, 12, 0, NUMPIXELS);
-  
+
+
+    //Loop over all the LEDs, if their the same as any of the s, m, or h variables then light the appropriate LED with the appropriate colour
     for(int i = 0; i < NUMPIXELS; i++){
-        if(i == 0){
-          
-          pixels.setPixelColor(i, pixels.Color(50,50,50));
+        if(i == 0 ){ // Give the the LED, at the equivalent point as the 12 hour mark a white LED, to indicate the top
+          pixels.setPixelColor(i, pixels.Color(20,20,20));
+//          If the hour is at one of the white lights, show the hour light over the white light
           if(i == h){
             pixels.setPixelColor(i, pixels.Color(0,0,150));
           }
@@ -190,15 +195,18 @@ void neoPixelTime(int secs, int mins, int hrs){
           pixels.setPixelColor(i, pixels.Color(0,150,0));
         } else if(i == h) {
           pixels.setPixelColor(i, pixels.Color(0,0,150));    
-        } else {
+        } else { 
           pixels.setPixelColor(i, pixels.Color(0,0,0));
         }
     }
     
-//    Serial.println(mins);
 }
 
+
+// Simple animation that provides visual feedback when the user changes modes
 void changeModeAnimation(){
+
+  // If the user has just changed mode
   if(counter != previousCounter){
             
             for(int i = 0; i > NUMPIXELS + 1; i++){
@@ -220,21 +228,23 @@ void changeModeAnimation(){
               
               pixels.setPixelColor(i, pixels.Color(map(i, NUMPIXELS, 0, 0, 155), 0, map(i, 0, NUMPIXELS, 0, 155)));
               pixels.show();
+              // Increases the delay on each LED, gives the animation an ease-out effect
               delay(max(10, i * 3));
-              reverse = true;
             }
-    
               Serial.println("changing");
-
-            
          }
 }
 
 void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
+      yr = yr;
+      mnth = mnth;
+      dy = dy;
+      hrs = hrs;
+      mins = mins;
 
       //Three arguement are the chosen locations Longitude, latitude, and that locations difference from UTC
      //the Dusk2Dawn library incorrectly returns British Summer Time as 0 difference from UTC (it should be +1)...
-     // ...this means between 27th October and 31st march the third parameter must be at -1, other times it should be 0 
+     // ...this means between 27th October and 31st March (GMT) the third parameter must be at -1, other times it should be 0 
      int UTC_difference = 0;
 
      //Check that the date is within GMT time, not BST
@@ -247,6 +257,7 @@ void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
      } 
 
      //Pass the relevant location and UTC difference into the Dusk2Dawn library
+     
      Dusk2Dawn london(LON_latitude, LON_longitude, UTC_difference);
       // Available methods are sunrise() and sunset(). Arguments are year, month,
       // day, and if Daylight Saving Time is in effect.
@@ -255,92 +266,47 @@ void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
       int londonSunrise  = london.sunrise(yr, mnth, dy, true);
       int londonSunset   = london.sunset(yr, mnth, dy, true);
 
-      //The sunrise/sunset times returned as a character array
-      
-      char sunset[6];
-      char sunrise[6];
-      Dusk2Dawn::min2str(sunset, londonSunset);
-      Dusk2Dawn::min2str(sunrise, londonSunrise);
-
      
-      /* Because the sunset times are returned as, for example '18:10' it's only possible to perform maths using their ASCII codes
-       *  this wouldn't have been reasonable to using these numbers for NeoPixel display, the below converts them to usable numbers
-       */
-
-      //Convert the ASCII code of each digit to it's integer
-      String sunset_hour_num1 = String((sunset[0]+0) - 48);
-      String sunset_hour_num2 = String((sunset[1]+0) - 48);
-      //Cocatanate these into a string
-      String sunset_hour_str = sunset_hour_num1 + sunset_hour_num2;
-      //Convert the string to a number
-      int sunset_hour = sunset_hour_str.toInt();
-
-      String sunset_minute_num1 = String((sunset[3]+0) - 48);
-      String sunset_minute_num2 = String((sunset[4]+0) - 48);
-      String sunset_minute_str = sunset_minute_num1 + sunset_minute_num2;
-      int sunset_minute = sunset_minute_str.toInt();
-
-      String sunrise_hour_num1 = String((sunrise[0]+0) - 48);
-      String sunrise_hour_num2 = String((sunrise[1]+0) - 48);
-      String sunrise_hour_str = sunrise_hour_num1 + sunrise_hour_num2;
-      int sunrise_hour = sunrise_hour_str.toInt();
-
-      String sunrise_minute_num1 = String((sunrise[3]+0) - 48);
-      String sunrise_minute_num2 = String((sunrise[4]+0) - 48);
-      String sunrise_minute_str = sunrise_minute_num1 + sunrise_minute_num2;
-      int sunrise_minute = sunrise_minute_str.toInt();
-      
-//      Serial.print((String)"Sunrise: " + sunrise);
-//      Serial.print((String)" Usable numbers: " + sunrise_hour + "," + sunrise_minute);
-//      Serial.print((String)" Sunset: " + sunset);
-//      Serial.print((String)" Usable numbers: " + sunset_hour + "," + sunset_minute);
-//      Serial.println();
-
       //A countdown to sunrise and sunset, if sunrise/sunset has passed it returns a negative number equal to the minutes since
       int sunriseCountdown = londonSunrise - ((hrs * 60) + mins);
       int sunsetCountdown = londonSunset - ((hrs * 60) + mins);
+    
+      pixels.setBrightness(50);
 
+      
+//    See what time of day it is, related to the sunrise and sunset time and return true for the appropriate time of day, false for the others
+      int sunrising = sunriseCountdown < 15 && sunriseCountdown > -15 ? 1 : 0; 
+      int daytime = sunriseCountdown < -15 && sunsetCountdown > 15 ? 1 : 0;
+      int sunsetting = sunsetCountdown < 15 && sunsetCountdown > -15 ? 1 : 0;
 
+      // Create a rotating fade animation, the number increases round to the length of NUMPIXELS, then resets, resulting in a continious rotation
       light_pos = light_pos + 0.6;
-
-
+      
       if(light_pos > NUMPIXELS) {
         light_pos = 0;
       }
-     
-
-      pixels.setBrightness(50);
+      
       for(int i = 0; i < NUMPIXELS; i++){
-        
-        
+
+        // Using the light_pos variable, find the leds before and after them and return a decreased number based on it's distance from the main light_pos. This is used as the green value later on.
         float distFrom_light_pos1 = abs(light_pos - i);
         float distFrom_light_pos2 = abs(light_pos - i + NUMPIXELS);
         float distFrom_light_pos3 = abs(light_pos - i - NUMPIXELS);
-    
         float distFrom_light_pos = min(distFrom_light_pos1, min(distFrom_light_pos2, distFrom_light_pos3));
-    
         int brightness = max(150 - distFrom_light_pos * 40, 0);
 
-        minute_color = map(secs, 0, 60, 0, 255);
 
-        
-        int sunriseParam = sunriseCountdown;  // Change these variables to test the change of colour at different time of day
-        int sunsetParam = sunsetCountdown;   // between 15 and -15 for each is at sunrise and sunset respectively
-        
-        int sunrising = sunriseParam < 15 && sunriseParam > -15 ? 1 : 0; 
-        int daytime = sunriseParam < -15 && sunsetParam > 15 ? 1 : 0;
-        int sunsetting = sunsetParam < 15 && sunsetParam > -15 ? 1 : 0;
-//        int nighttime = sunsetParam < -15 && sunriseParam > 15 ? 1 : 0;
-
-        
-//        Serial.println((String)sunriseParam + " " + sunsetParam + " " + sunsetting);
-        
+        // Check to see which of the statements related to the time of day is true, and light the NeoPixel ring accordingly
         if(sunrising){
-            red_output = map(sunriseParam, -15, 15, 100, 255);
-            blue_output = map(sunriseParam, 15, -15, 100, 255);
+
+//          inside each if statement, the blue and red values are mapped at different rates, or to different values. This returns 
+//          blue of daytime, purple for night, and fades between the two at sunrise and sunset
+            red_output = map(sunriseCountdown, -15, 15, 100, 255);
+            blue_output = map(sunriseCountdown, 15, -15, 100, 255);
             Serial.println("Sun is rising");
             
         } else if(daytime){
+              // Creates a simple, subtle fade, here from blue, to blue-purple, a similar thing is done during day time. Because it looks pretty
              if(secs < 30){
                 red_output = map(secs, 60, 0, 0, 25);
                 
@@ -350,13 +316,12 @@ void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
                 
                 blue_output =  map(secs, 60, 0, 150, 255);
               }
-              
+
               Serial.println("Sunny Day");
           
         } else if (sunsetting){
-            red_output = map(sunsetParam, -15, -15, 100, 255);
-            blue_output = map(sunsetParam, -15, 30, 100, 255);
-//            Serial.println("The suns getting low");
+            red_output = map(sunsetCountdown, -15, -15, 100, 255);
+            blue_output = map(sunsetCountdown, -15, 30, 100, 255);
           
         } else if (!daytime){
            if(secs < 30){
@@ -371,8 +336,11 @@ void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
               
           Serial.println("Pub?");
         }
-        Serial.println((String)blue_output + " " + red_output + "  Mins until sunset: " + sunriseCountdown);
-//Serial.println(daytime);
+        
+#ifdef DEBUG
+Serial.println((String)"Blue val:" + blue_output + " Red val: " + red_output + "  Mins until sunset: " + sunsetCountdown + "  Mins until sunrise: " + sunriseCountdown);
+#endif
+     
         pixels.setPixelColor(i, pixels.Color(red_output, brightness, blue_output));
       }
       
@@ -381,27 +349,25 @@ void sunriseSunset(int yr, int mnth, int dy, int secs, int mins, int hrs){
 }
 void loop() {
 
-//      Serial.println(counter);
       DateTime t = currentTime();
 
-      
-        if(counter == 0){
-
+      // Using the mode switch function (See the bottom of the document), check what the counter says, and run the appropriate block. 
+      if(counter == 0){
           changeModeAnimation();
+          // the times from the RTC our passed in as arguments to each function
           sunriseSunset(t.year(), t.month(), t.day(),t.second(), t.minute(), t.hour());    
-        
       } else {
-
-       
           changeModeAnimation();
-          neoPixelTime(t.second(), t.minute(), t.hour());
-          
+          neoPixelTime(t.second(), t.minute(), t.hour());          
       }
 
-
+      // We need to know the previous counter value for the change mode animation.
       previousCounter = counter;
+      
+//#ifdef DEBUG
+Serial.println((String)"Time: " + t.hour() + ":" + t.minute() + ":" + t.second());
+//#endif
 
-      Serial.println((String)"Time: " + t.hour() + ":" + t.minute() + ":" + t.second());
       modeSwitch();
       pixels.show();
 }
