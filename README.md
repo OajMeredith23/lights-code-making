@@ -6,3 +6,5 @@ Year 1 UI/UX design degree, unit on building a clock with Arduino, Adafruit NeoP
 
 - RTCLib - *for the real time clock*
 - Adafruit NeoPixel - *for the NeoPixel ring* 
+
+![Final Clock Image](final-clock.png "Final Clock Image")
